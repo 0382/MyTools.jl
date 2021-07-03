@@ -1,0 +1,7 @@
+name = "MyTools"
+uuid = "7f3a4d55-37c0-5c78-a157-1a679c1a92c5"
+authors = ["jinshaoliang <18322825326@163.com>"]
+version = "0.1.0"
+
+[compat]
+julia = "1"
