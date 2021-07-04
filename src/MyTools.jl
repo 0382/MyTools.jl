@@ -1,10 +1,15 @@
 module MyTools
 
-include("inifile.jl")
-
-# export inifile related types and functions
-export IniFile, IniItem, IniSection,
-       isgood, error_msg, read_inifile, saveAs
+module Ini
+    include("inifile.jl")
+    export IniFile, IniItem, IniSection,
+       isgood, error_msg, saveAs,
        getValue, getString, getBool, getInt, getFloat
+end # module Ini
 
-end
+module Tool
+    include("tool.jl")
+    export GPA, get_id_check_code, check_idcard
+end # module Tool
+
+end # module MyTools
