@@ -2,6 +2,7 @@ using Documenter
 push!(LOAD_PATH, "..")
 using MyTools.Ini
 using MyTools.Tool
+using MyTools.AtomName
 
 makedocs(
     sitename="MyTools",
