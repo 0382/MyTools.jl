@@ -28,8 +28,12 @@ find_element
 
 ```@docs
 Isotope
+NuclearShell
 Z(::Isotope)
 N
 A
+Base.show(::IO, ::MIME"text/plain", ::Isotope)
+Base.show(::IO, ::MIME"text/markdown", ::Isotope)
+isotope
+m_config_size
 ```
-

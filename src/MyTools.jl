@@ -11,7 +11,11 @@ module AtomName
         find_element_with_latin,
         find_element_with_pinyin,
         find_element,
-        Isotope, N, A
+        Isotope, N, A,
+        NuclearShell,
+        isotope,
+        m_config_size,
+        p_shell, sd_shell, pf_shell
 end # module AtomName
 
 module Ini

@@ -215,7 +215,8 @@ end
         Z::Int
         N::Int
     end
-同位素
+同位素。构造函数：
+    Isotope(Z::Integer, N::Integer)
 """
 struct Isotope
     Z::Int
@@ -244,3 +245,38 @@ Base.show(io::IO, ::MIME"text/markdown", iso::Isotope) = begin
     show(io, "text/markdown", Markdown.parse("``^{$(A(iso))}\\mathrm{$(symbol(ele))}``"))
 end
 
+"""
+    struct NuclearShell
+        core::Int
+        valence::Int
+    end
+根据原子核壳模型决定的原子核壳结构，给出其中的芯的粒子数和价空间的粒子数。
+注意不是壳的核子数，而是指对于质子或者中子某一种核子的壳结构。
+"""
+struct NuclearShell
+    core::Int
+    valence::Int
+    NuclearShell(core::Integer, valence::Integer) = new(Int(core), Int(valence))
+end
+
+"""
+    isotope(ns::NuclearShell, Z::Int, N::Int)
+给定一个壳，给定价核子个数，得到核素。这里的壳是对质子和中子是一样的。
+"""
+function isotope(ns::NuclearShell, Z::Int, N::Int)
+    @assert Z < ns.valence "Z = $Z is larger than valence size $(ns.valence)"
+    @assert N < ns.valence "N = $N is larger than valence size $(ns.valence)"
+    Isotope(ns.core + Z, ns.core + N)
+end
+
+const p_shell = NuclearShell(2, 6)
+const sd_shell = NuclearShell(8, 12)
+const pf_shell = NuclearShell(20, 20)
+
+"""
+    m_config_size(ns::NuclearShell, Z::Int, N::Int)
+计算某一个壳内`Z+N`核子数的全组态大小（m-scheme）
+"""
+function m_config_size(ns::NuclearShell, Z::Int, N::Int)
+    binomial(big(ns.valence), big(Z)) * binomial(big(ns.valence), big(N))
+end

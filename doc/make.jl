@@ -9,6 +9,7 @@ makedocs(
     pages=[
         "index.md",
         "Ini" => "ini.md",
-        "Tool" => "tool.md"
+        "Tool" => "tool.md",
+        "AtomName" => "atom-name.md"
     ]
 )
