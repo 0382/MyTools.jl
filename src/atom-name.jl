@@ -167,40 +167,40 @@ const element_table = [
 find_element_with_Z(Z::Int) = (Z < 1 && Z > 118) ? NoneElement : element_table[Z]
 
 "通过元素符号查找元素"
-function find_element_with_symbol(sym::String)
+function find_element_with_symbol(sym::AbstractString)
     pos = findfirst(ele -> ele.symbol_name == sym, element_table)
     pos === nothing ? NoneElement : element_table[pos]
 end
 
 "通过元素中文名查找元素"
-function find_element_with_chinese(chinese::String)
+function find_element_with_chinese(chinese::AbstractString)
     pos = findfirst(ele -> ele.chinese_name == chinese, element_table)
     pos === nothing ? NoneElement : element_table[pos]
 end
 
 "通过元素英文名查找元素"
-function find_element_with_english(english::String)
+function find_element_with_english(english::AbstractString)
     pos = findfirst(ele -> ele.english_name == english, element_table)
     pos === nothing ? NoneElement : element_table[pos]
 end
 
 "通过元素拉丁文名查找元素"
-function find_element_with_latin(latin::String)
+function find_element_with_latin(latin::AbstractString)
     pos = findfirst(ele -> ele.latin_name == latin, element_table)
     pos === nothing ? NoneElement : element_table[pos]
 end
 
 "通过元素拼音查找元素"
-function find_element_with_pinyin(pinyin::String)
+function find_element_with_pinyin(pinyin::AbstractString)
     pos = findfirst(ele -> ele.pinyin_name == pinyin, element_table)
     pos === nothing ? NoneElement : element_table[pos]
 end
 
 """
-    find_element(name::Union{Int, String})
+    find_element(name::Union{Int, AbstractString})
 通过任何名称查找元素，包括使用原子序数
 """
-function find_element(name::Union{Int, String})
+function find_element(name::Union{Int, AbstractString})
     name isa Int && return find_element_with_Z(name)
     ele = find_element_with_symbol(name)
     is_none(ele) && (ele = find_element_with_chinese(name))
@@ -217,11 +217,30 @@ end
     end
 同位素。构造函数：
     Isotope(Z::Integer, N::Integer)
+    Isotope(name::AbstractString)
 """
 struct Isotope
     Z::Int
     N::Int
     Isotope(Z::Integer, N::Integer) = new(Int(Z), Int(N))
+end
+
+Isotope(name::AbstractString) = parse(Isotope, name)
+
+"""
+    parse(::Type{Isotope}, str::AbstractString)
+解析核素符号
+"""
+Base.parse(::Type{Isotope}, str::AbstractString)::Isotope = begin
+    m = match(r"([A-Z][a-z]*)(\d{1,3})", str)
+    m === nothing && error("match error in parsing '$str'")
+    name = m.captures[1]
+    _A = parse(Int, m.captures[2])
+    ele = find_element_with_symbol(name)
+    _Z = Z(ele)
+    _N = _A - _Z
+    @assert _N >= 0 "$str isotope has a negative neutron number $_N"
+    Isotope(_Z, _N)
 end
 
 "获取同位素的质子数"
@@ -279,4 +298,17 @@ const pf_shell = NuclearShell(20, 20)
 """
 function m_config_size(ns::NuclearShell, Z::Int, N::Int)
     binomial(big(ns.valence), big(Z)) * binomial(big(ns.valence), big(N))
+end
+
+
+"""
+    valence(iso::Isotope, ns::NuclearShell)
+给定一个核素，给定芯，给出价空间的大小
+"""
+function valence(iso::Isotope, ns::NuclearShell)
+    _Z = iso.Z - ns.core
+    _N = iso.N - ns.core
+    @assert _Z <= ns.valence "valence proton number $_Z is larger than valence size $(ns.valence)"
+    @assert _N <= ns.valence "valence neutron number $_N is larger than valence size $(ns.valence)"
+    _Z, _N
 end

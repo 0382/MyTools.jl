@@ -15,7 +15,9 @@ module AtomName
         NuclearShell,
         isotope,
         m_config_size,
-        p_shell, sd_shell, pf_shell
+        p_shell, sd_shell, pf_shell,
+        m_config_size,
+        valence
 end # module AtomName
 
 module Ini

@@ -76,11 +76,11 @@ function read_inifile(fp::IO)::Vector{IniSection}
 end
 
 """
-    getValue(ini::IniFile, section::String, key::String)
-    getValue(ini::IniFile, key::String)
+    getValue(ini::IniFile, section::AbstractString, key::AbstractString)
+    getValue(ini::IniFile, key::AbstractString)
 Get a value with a key in one section. The version without section name searches the `default` section.
 """
-function getValue(ini::IniFile, section::String, key::String)::Union{Bool,Int64,Float64,String}
+function getValue(ini::IniFile, section::AbstractString, key::AbstractString)::Union{Bool,Int64,Float64,String}
     try
         err_secname = section == "" ? "(default)" : section
         pos = findfirst(x -> x.name == section, ini.sections)
@@ -96,38 +96,38 @@ function getValue(ini::IniFile, section::String, key::String)::Union{Bool,Int64,
 end
 
 """
-    getString(ini::IniFile, section::String, key::String)
-    getString(ini::IniFile, key::String)
+    getString(ini::IniFile, section::AbstractString, key::AbstractString)
+    getString(ini::IniFile, key::AbstractString)
 Get a string value with a key in one section. The version without section name searches the `default` section.
 """
-getString(ini::IniFile, section::String, key::String) = getValue(ini, section, key)::String
+getString(ini::IniFile, section::AbstractString, key::AbstractString) = getValue(ini, section, key)::AbstractString
 
 """
-    getBool(ini::IniFile, section::String, key::String)
-    getBool(ini::IniFile, key::String)
+    getBool(ini::IniFile, section::AbstractString, key::AbstractString)
+    getBool(ini::IniFile, key::AbstractString)
 Get a boolean value with a key in one section. The version without section name searches the `default` section.
 """
-getBool(ini::IniFile, section::String, key::String) = getValue(ini, section, key)::Bool
+getBool(ini::IniFile, section::AbstractString, key::AbstractString) = getValue(ini, section, key)::Bool
 
 """
-    getInt(ini::IniFile, section::String, key::String)
-    getInt(ini::IniFile, key::String)
+    getInt(ini::IniFile, section::AbstractString, key::AbstractString)
+    getInt(ini::IniFile, key::AbstractString)
 Get a integer value with a key in one section. The version without section name searches the `default` section.
 """
-getInt(ini::IniFile, section::String, key::String) = getValue(ini, section, key)::Int64
+getInt(ini::IniFile, section::AbstractString, key::AbstractString) = getValue(ini, section, key)::Int64
 
 """
-    getFloat(ini::IniFile, section::String, key::String)
-    getFloat(ini::IniFile, key::String)
+    getFloat(ini::IniFile, section::AbstractString, key::AbstractString)
+    getFloat(ini::IniFile, key::AbstractString)
 Get a floating point value with a key in one section. The version without section name searches the `default` section.
 """
-getFloat(ini::IniFile, section::String, key::String) = getValue(ini, section, key)::Float64
+getFloat(ini::IniFile, section::AbstractString, key::AbstractString) = getValue(ini, section, key)::Float64
 
-getValue(ini::IniFile, key::String) = getValue(ini, "", key)
-getString(ini::IniFile, key::String) = getString(ini, "", key)
-getBool(ini::IniFile, key::String) = getBool(ini, "", key)
-getInt(ini::IniFile, key::String) = getInt(ini, "", key)
-getFloat(ini::IniFile, key::String) = getFloat(ini, "", key)
+getValue(ini::IniFile, key::AbstractString) = getValue(ini, "", key)
+getString(ini::IniFile, key::AbstractString) = getString(ini, "", key)
+getBool(ini::IniFile, key::AbstractString) = getBool(ini, "", key)
+getInt(ini::IniFile, key::AbstractString) = getInt(ini, "", key)
+getFloat(ini::IniFile, key::AbstractString) = getFloat(ini, "", key)
 
 """
     Base.show(io::IO, ini::IniFile)
@@ -153,13 +153,13 @@ function saveAs(ini::IniFile, fname::AbstractString)
 end
 
 # 去掉尾部的注释
-function remove_comment(line::String)::String
+function remove_comment(line::AbstractString)::String
     rl = line[:]
     for c in ["#", ";", "//"]
         pos = findfirst(c, rl)
         pos === nothing || (rl = rl[1:pos.start - 1])
     end
-return rl
+    return rl
 end
 
 # 利用一行字符串创建 IniItem

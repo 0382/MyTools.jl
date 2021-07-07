@@ -36,4 +36,7 @@ Base.show(::IO, ::MIME"text/plain", ::Isotope)
 Base.show(::IO, ::MIME"text/markdown", ::Isotope)
 isotope
 m_config_size
+Base.parse(::Type{Isotope}, ::AbstractString)
+m_config_size
+valence
 ```

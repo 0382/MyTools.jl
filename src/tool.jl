@@ -14,10 +14,10 @@ const id_weight = [7, 9, 10, 5, 8, 4, 2, 1, 6, 3, 7, 9, 10, 5, 8, 4, 2]
 const id_check_code = "10X98765432"
 
 """
-    get_id_check_code(id17::String)::Char
+    get_id_check_code(id17::AbstractString)::Char
 根据前面17位身份证数字计算校验码
 """
-function get_id_check_code(id17::String)::Char
+function get_id_check_code(id17::AbstractString)::Char
     length(id17) < 17 && error("至少要给身份证前17位")
     sum = 0
     for i = 1:17
@@ -27,10 +27,10 @@ function get_id_check_code(id17::String)::Char
 end
 
 """
-    check_idcard(id::String)::Bool
+    check_idcard(id::AbstractString)::Bool
 检验身份证校验码是否正确
 """
-function check_idcard(id::String)::Bool
+function check_idcard(id::AbstractString)::Bool
     length(id) != 18 && error("请使用18位身份证")
     return get_id_check_code(id) == id[18]
 end
