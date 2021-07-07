@@ -21,9 +21,9 @@ function get_id_check_code(id17::String)::Char
     length(id17) < 17 && error("至少要给身份证前17位")
     sum = 0
     for i = 1:17
-    sum += (id17[i] - '0') * id_weight[i]
+        sum += (id17[i] - '0') * id_weight[i]
     end
-    return id_check_code[mod1(sum, 11)]
+    return id_check_code[mod(sum, 11) + 1]
 end
 
 """
