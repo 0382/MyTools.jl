@@ -1,24 +1,37 @@
 module MyTools
 
-module AtomName
-    include("atom-name.jl")
+module Atom
+    include("atom.jl")
     export Element, NoneElement, is_none,
-        Z, atomic_number, symbol, chinese, english, latin, pinyin,
+        getZ, atomic_number, symbol, chinese, english, latin, pinyin,
         find_element_with_Z,
         find_element_with_symbol,
         find_element_with_chinese,
         find_element_with_english,
         find_element_with_latin,
         find_element_with_pinyin,
-        find_element,
-        Isotope, N, A,
-        NuclearShell,
-        isotope,
-        m_config_size,
-        p_shell, sd_shell, pf_shell,
-        m_config_size,
-        valence
+        find_element
 end # module AtomName
+
+module Nucleus
+    using ..Atom
+    import ..Atom:getZ
+    include("nucleus.jl")
+    export Isotope,
+        getN, getA,
+        SingleParticleOrbit,
+        JOrbit, MOrbit,
+        name,
+        NuclearShell,
+        s_shell, p_shell, sd_shell, pf_shell,
+        j_orbits, m_orbits,
+        jsize, msize, psize, nsize,
+        m_config_size,
+        NShell, HO_orbits,
+        ValenceSpace,
+        valence,
+        p_space, sd_space, pf_space
+end
 
 module Ini
     include("inifile.jl")

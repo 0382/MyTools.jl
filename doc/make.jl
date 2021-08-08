@@ -2,7 +2,8 @@ using Documenter
 push!(LOAD_PATH, "..")
 using MyTools.Ini
 using MyTools.Tool
-using MyTools.AtomName
+using MyTools.Atom
+using MyTools.Nucleus
 
 makedocs(
     sitename="MyTools",
@@ -10,6 +11,7 @@ makedocs(
         "index.md",
         "Ini" => "ini.md",
         "Tool" => "tool.md",
-        "AtomName" => "atom-name.md"
+        "Atom" => "atom.md",
+        "Nucleus" => "nucleus.md"
     ]
 )

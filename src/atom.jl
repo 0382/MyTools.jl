@@ -8,7 +8,16 @@ using Markdown
         latin_name::String
         pinyin_name::String
     end # struct Element
-元素结构体，包含元素的原子序数，元素符号，中文名，英文名，拉丁文名，拼音名
+元素结构体，包含元素的原子序数，元素符号，中文名，英文名，拉丁文名，拼音名。
+
+构造函数：
+```julia
+Element(Z, sym, chinese, english, latin, pinyin)
+Element(ele::Element)
+Element(Z::Int)
+Element(symbol::Union{AbstractString, Symbol})
+```
+其中最后两个表示使用原子序数构造和使用元素符号构造元素。
 """
 struct Element
     atomic_number::Int
@@ -27,7 +36,7 @@ const NoneElement = Element(-1, "", "", "", "", "")
 is_none(ele::Element)::Bool = ele.atomic_number == -1
 
 "获取原子序数"
-Z(ele::Element) = ele.atomic_number
+getZ(ele::Element) = ele.atomic_number
 "获取原子序数"
 atomic_number(ele::Element) = ele.atomic_number
 "获取元素符号"
@@ -210,105 +219,6 @@ function find_element(name::Union{Int, AbstractString})
     return ele
 end
 
-"""
-    struct Isotope
-        Z::Int
-        N::Int
-    end
-同位素。构造函数：
-    Isotope(Z::Integer, N::Integer)
-    Isotope(name::AbstractString)
-"""
-struct Isotope
-    Z::Int
-    N::Int
-    Isotope(Z::Integer, N::Integer) = new(Int(Z), Int(N))
-end
-
-Isotope(name::AbstractString) = parse(Isotope, name)
-
-"""
-    parse(::Type{Isotope}, str::AbstractString)
-解析核素符号
-"""
-Base.parse(::Type{Isotope}, str::AbstractString)::Isotope = begin
-    m = match(r"([A-Z][a-z]*)(\d{1,3})", str)
-    m === nothing && error("match error in parsing '$str'")
-    name = m.captures[1]
-    _A = parse(Int, m.captures[2])
-    ele = find_element_with_symbol(name)
-    _Z = Z(ele)
-    _N = _A - _Z
-    @assert _N >= 0 "$str isotope has a negative neutron number $_N"
-    Isotope(_Z, _N)
-end
-
-"获取同位素的质子数"
-Z(iso::Isotope) = iso.Z
-"获取同位素的中子数"
-N(iso::Isotope) = iso.N
-"获取同位素的核子数"
-A(iso::Isotope) = iso.Z + iso.N
-
-"以文本形式显示同位素，比如`Ne20`"
-Base.show(io::IO, ::MIME"text/plain", iso::Isotope) = begin
-    ele = find_element_with_Z(iso.Z)
-    is_none(ele) && error("no such element")
-    print(io, symbol(ele), A(iso))
-end
-
-"以latex形式显示同位素"
-Base.show(io::IO, ::MIME"text/markdown", iso::Isotope) = begin
-    ele = find_element_with_Z(iso.Z)
-    is_none(ele) && error("no such element")
-    show(io, "text/markdown", Markdown.parse("``^{$(A(iso))}\\mathrm{$(symbol(ele))}``"))
-end
-
-"""
-    struct NuclearShell
-        core::Int
-        valence::Int
-    end
-根据原子核壳模型决定的原子核壳结构，给出其中的芯的粒子数和价空间的粒子数。
-注意不是壳的核子数，而是指对于质子或者中子某一种核子的壳结构。
-"""
-struct NuclearShell
-    core::Int
-    valence::Int
-    NuclearShell(core::Integer, valence::Integer) = new(Int(core), Int(valence))
-end
-
-"""
-    isotope(ns::NuclearShell, Z::Int, N::Int)
-给定一个壳，给定价核子个数，得到核素。这里的壳是对质子和中子是一样的。
-"""
-function isotope(ns::NuclearShell, Z::Int, N::Int)
-    @assert Z < ns.valence "Z = $Z is larger than valence size $(ns.valence)"
-    @assert N < ns.valence "N = $N is larger than valence size $(ns.valence)"
-    Isotope(ns.core + Z, ns.core + N)
-end
-
-const p_shell = NuclearShell(2, 6)
-const sd_shell = NuclearShell(8, 12)
-const pf_shell = NuclearShell(20, 20)
-
-"""
-    m_config_size(ns::NuclearShell, Z::Int, N::Int)
-计算某一个壳内`Z+N`核子数的全组态大小（m-scheme）
-"""
-function m_config_size(ns::NuclearShell, Z::Int, N::Int)
-    binomial(big(ns.valence), big(Z)) * binomial(big(ns.valence), big(N))
-end
-
-
-"""
-    valence(iso::Isotope, ns::NuclearShell)
-给定一个核素，给定芯，给出价空间的大小
-"""
-function valence(iso::Isotope, ns::NuclearShell)
-    _Z = iso.Z - ns.core
-    _N = iso.N - ns.core
-    @assert _Z <= ns.valence "valence proton number $_Z is larger than valence size $(ns.valence)"
-    @assert _N <= ns.valence "valence neutron number $_N is larger than valence size $(ns.valence)"
-    _Z, _N
-end
+Element(ele::Element) = ele
+Element(Z::Int) = find_element_with_Z(Z)
+Element(symbol::Union{AbstractString, Symbol}) = find_element_with_symbol(string(symbol))
