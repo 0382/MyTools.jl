@@ -14,7 +14,7 @@ using Markdown
 ```julia
 Element(Z, sym, chinese, english, latin, pinyin)
 Element(ele::Element)
-Element(Z::Int)
+Element(Z::Integer)
 Element(symbol::Union{AbstractString, Symbol})
 ```
 其中最后两个表示使用原子序数构造和使用元素符号构造元素。
@@ -173,7 +173,7 @@ const element_table = [
 ]
 
 "通过原子序数查找元素"
-find_element_with_Z(Z::Int) = (Z < 1 && Z > 118) ? NoneElement : element_table[Z]
+find_element_with_Z(Z::Integer) = (Z < 1 && Z > 118) ? NoneElement : element_table[Z]
 
 "通过元素符号查找元素"
 function find_element_with_symbol(sym::AbstractString)
@@ -206,11 +206,11 @@ function find_element_with_pinyin(pinyin::AbstractString)
 end
 
 """
-    find_element(name::Union{Int, AbstractString})
+    find_element(name::Union{Integer, AbstractString})
 通过任何名称查找元素，包括使用原子序数
 """
-function find_element(name::Union{Int, AbstractString})
-    name isa Int && return find_element_with_Z(name)
+function find_element(name::Union{Integer, AbstractString})
+    name isa Integer && return find_element_with_Z(name)
     ele = find_element_with_symbol(name)
     is_none(ele) && (ele = find_element_with_chinese(name))
     is_none(ele) && (ele = find_element_with_english(name))
@@ -220,5 +220,5 @@ function find_element(name::Union{Int, AbstractString})
 end
 
 Element(ele::Element) = ele
-Element(Z::Int) = find_element_with_Z(Z)
+Element(Z::Integer) = find_element_with_Z(Z)
 Element(symbol::Union{AbstractString, Symbol}) = find_element_with_symbol(string(symbol))

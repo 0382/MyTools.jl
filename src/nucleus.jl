@@ -64,20 +64,16 @@ Base.show(io::IO, ::MIME"text/markdown", iso::Isotope) = begin
     show(io, "text/markdown", Markdown.parse("``^{$(getA(iso))}\\mathrm{$(symbol(ele))}``"))
 end
 
-const l_name_map = Dict(
-    0 => "s",
-    1 => "p",
-    2 => "d",
-    3 => "f",
-    4 => "g",
-    5 => "h",
-    # ... 后面的不太用的上，就不写了
-)
-
-
 # ------------------
 # 单粒子轨道
 # ------------------
+
+const l_name_map = Dict(
+     0 => "s",  1 => "p",  2 => "d",  3 => "f",
+     4 => "g",  5 => "h",  6 => "i",  7 => "j",
+     8 => "k",  9 => "l", 10 => "m", 11 => "n",
+    12 => "o" 
+)
 
 """
     abstract type SingleParticleOrbit end
@@ -131,11 +127,17 @@ MOrbit(orbit::JOrbit, m::Integer) = MOrbit(orbit.n, orbit.l, orbit.j, m, orbit.t
 
 """
     name(orbit::SingleParticleOrbit)
-单粒子轨道的名字，例如`0d3/2`.
+单粒子轨道的名字。例如`p(0d3/2)`，其中最外面的`p, n`表示质子或者中子，
+`l > 12`以后的轨道角动量都用`"x"`表示。（我想也没人对这之后的轨道角动量感兴趣。）
 """
 function name(orbit::SingleParticleOrbit)
-    "$(orbit.n)$(l_name_map[orbit.l])$(orbit.j)/2"
+    nucleon_type = orbit.tz == -1 ? "p" : "n"
+    l_name = get(l_name_map, orbit.l, "x")
+    "$(nucleon_type)($(orbit.n)$(l_name)$(orbit.j)/2)"
 end
+
+"显示j-scheme轨道"
+Base.show(io::IO, orbit::JOrbit) = print(io, name(orbit))
 
 """
     struct NuclearShell
@@ -163,6 +165,8 @@ end
 function Base.merge(ns1::NuclearShell, ns2::NuclearShell, xns...)
     merge(NuclearShell(vcat(ns1.orbits, ns2.orbits)), xns...)
 end
+
+Base.merge(ns::NuclearShell) = ns
 
 const s_shell = NuclearShell([
     JOrbit(0, 0, 1, -1), # 0s1/2
@@ -263,11 +267,11 @@ function nsize(ns::NuclearShell)
 end
 
 """
-    m_config_size(ns::NuclearShell, Z::Int, N::Int)
+    m_config_size(ns::NuclearShell, Z::Integer, N::Integer)
 计算某一壳内，`Z+N`核子数的全组态大小。结果没有问题，效率也还行，但是大体系可能会压不住内存。
 光靠GC确实还有不太行，可能用c++来写会好很一点。
 """
-function m_config_size(ns::NuclearShell, Z::Int, N::Int)
+function m_config_size(ns::NuclearShell, Z::Integer, N::Integer)
     orbits = m_orbits(ns)
     orbit_number = msize(ns)
 
@@ -341,10 +345,10 @@ function m_config_size(ns::NuclearShell, Z::Int, N::Int)
 end
 
 """
-    NShell(N::Int)
+    HO_shell(N::Integer)
 构建一个`N = 2n + l`的谐振子壳层。
 """
-function NShell(N::Int)
+function HO_shell(N::Integer)
     orbits = JOrbit[]
     for n = 0:div(N, 2)
         l = N - 2n
@@ -357,11 +361,11 @@ function NShell(N::Int)
 end
 
 """
-    HO_orbits(Nmax::Int)
+    HO_orbits(Nmax::Integer)
 构建从`N = 0`到`N = Nmax`的所有谐振子轨道。
 """
-function HO_orbits(Nmax::Int)
-    merge(ntuple(i -> NShell(i - 1), Nmax + 1)...)
+function HO_orbits(Nmax::Integer)
+    merge(ntuple(i -> HO_shell(i - 1), Nmax + 1)...)
 end
 
 """
@@ -390,10 +394,10 @@ ValenceSpace(core::Union{AbstractString, Isotope}, ns::Union{NuclearShell, Vecto
 end
 
 """
-    Isotope(ns::ValenceSpace, Z::Int, N::Int)
+    Isotope(ns::ValenceSpace, Z::Integer, N::Integer)
 给定一个价空间，给定价核子数目，得到核素。
 """
-function Isotope(vs::ValenceSpace, Z::Int, N::Int)
+function Isotope(vs::ValenceSpace, Z::Integer, N::Integer)
     ns = vs.ns
     @assert Z < psize(ns) "Z = $Z is larger than valence size $(psize(ns))"
     @assert N < nsize(ns) "N = $N is larger than valence size $(nsize(ns))"
@@ -401,10 +405,10 @@ function Isotope(vs::ValenceSpace, Z::Int, N::Int)
 end
 
 """
-    Isotope(core::Union{AbstractString, Isotope}, Z::Int, N::Int)
+    Isotope(core::Union{AbstractString, Isotope}, Z::Integer, N::Integer)
 给定一个核芯，以及在其之上的价核子数目，得到核素。这个函数没有价空间大小检查。
 """
-function Isotope(core::Union{AbstractString, Isotope}, Z::Int, N::Int)
+function Isotope(core::Union{AbstractString, Isotope}, Z::Integer, N::Integer)
     iso = Isotope(core)
     Isotope(iso.Z + Z, iso.N + N)
 end

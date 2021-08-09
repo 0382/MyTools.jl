@@ -27,7 +27,7 @@ module Nucleus
         j_orbits, m_orbits,
         jsize, msize, psize, nsize,
         m_config_size,
-        NShell, HO_orbits,
+        HO_shell, HO_orbits,
         ValenceSpace,
         valence,
         p_space, sd_space, pf_space

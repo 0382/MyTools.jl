@@ -22,6 +22,7 @@ JOrbit
 MOrbit
 MOrbit(::JOrbit, ::Integer)
 name
+Base.show(::IO, ::JOrbit)
 NuclearShell
 merge(::NuclearShell, ::NuclearShell)
 j_orbits
@@ -31,18 +32,18 @@ msize
 psize
 nsize
 m_config_size
-NShell
+HO_shell
 HO_orbits
 ValenceSpace
 ValenceSpace(::Union{AbstractString, Isotope}, ::Union{NuclearShell, Vector{JOrbit}})
-Isotope(::ValenceSpace, ::Int, ::Int)
-Isotope(::Union{AbstractString, Isotope}, ::Int, ::Int)
+Isotope(::ValenceSpace, ::Integer, ::Integer)
+Isotope(::Union{AbstractString, Isotope}, ::Integer, ::Integer)
 valence
 ```
 
 ## 一些常数
 
-壳模型常用壳空间。
+壳模型常用空间。
 ```julia
 s_shell::NuclearShell
 p_shell::NuclearShell
