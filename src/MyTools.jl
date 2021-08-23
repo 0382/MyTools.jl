@@ -26,6 +26,8 @@ module Nucleus
         s_shell, p_shell, sd_shell, pf_shell,
         j_orbits, m_orbits,
         jsize, msize, psize, nsize,
+        max_pj, max_nj,
+        partition,
         m_config_size,
         HO_shell, HO_orbits,
         ValenceSpace,

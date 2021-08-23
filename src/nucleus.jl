@@ -267,6 +267,62 @@ function nsize(ns::NuclearShell)
 end
 
 """
+    max_pj(ns::NuclearShell)
+计算壳内质子最大角动量。
+"""
+function max_pj(ns::NuclearShell)
+    maxj = 1
+    for orb in ns.orbits
+        if orb.tz == -1
+            maxj = max(maxj, orb.j)
+        end
+    end
+    return maxj
+end
+
+"""
+    max_nj(ns::NuclearShell)
+计算壳内中子最大角动量
+"""
+function max_nj(ns::NuclearShell)
+    maxj = 1
+    for orb in ns.orbits
+        if orb.tz == 1
+            maxj = max(maxj, orb.j)
+        end
+    end
+    return maxj
+end
+
+"""
+    partition(n::Int, capacities::AbstractArray)
+将 `n` 个小球放入 `length(capacities)` 个容器内，每个容器的容量由 `capacities` 数组指定
+生成所有可能的放置方式
+"""
+function partition(n::Int, capacities::AbstractArray)
+    result = Vector{Vector{Int}}()
+    next = (n::Int, caps::Vector{Int}, line::Vector{Int}) -> begin
+        if length(caps) == 1
+            if n <= caps[1]
+                push!(result, vcat(line, n))
+            end
+        else
+            for i = 0:min(n, caps[1])
+                next(n - i, copy(caps[2:end]), vcat(line, i))
+            end
+        end
+        nothing
+    end
+    next(n, capacities, Int[])
+    return result
+end
+
+# 对于 julia 来说，`~m = -m - 1` 的小trick就不好用了
+# 不过应该也无伤大雅
+@inline m2index(m::Int) = m >= 0 ? m : (-m + 1)
+@inline index2m(idx::Int) = isodd(idx) ? idx : (-idx + 1)
+
+"""
     m_config_size(ns::NuclearShell, Z::Integer, N::Integer)
 计算某一壳内，`Z+N`核子数的全组态大小。结果没有问题，效率也还行，但是大体系可能会压不住内存。
 光靠GC确实还有不太行，可能用c++来写会好很一点。
@@ -275,65 +331,47 @@ function m_config_size(ns::NuclearShell, Z::Integer, N::Integer)
     orbits = m_orbits(ns)
     orbit_number = msize(ns)
 
-    p_orbits = MOrbit[]
-    n_orbits = MOrbit[]
-    for ob::MOrbit in orbits
-        ob.tz == -1 && push!(p_orbits, ob)
-        ob.tz == 1 && push!(n_orbits, ob)
-    end
-    p_size = length(p_orbits)
-    n_size = length(n_orbits)
+    p_m_map = zeros(Int, max_pj(ns) + 1)
+    n_m_map = zeros(Int, max_nj(ns) + 1)
 
-    @assert p_size + n_size == orbit_number
-
-    # 先构建质子部分的组态
-    pconfigs::Vector{Pair{BitArray{1}, Int16}} = [BitArray(zeros(p_size)) => 0]
-    for _i in 1:Z
-        temp = []
-        for (D, MM) in pconfigs
-            idx = findfirst(D)
-            (idx === nothing) && (idx = p_size + 1)
-            for k in 1:idx-1
-                Dx = copy(D)
-                Dx[k] = true
-                MMx = MM + p_orbits[k].m
-                push!(temp, Dx => MMx)
-            end
+    for orb in orbits
+        if orb.tz == -1
+            p_m_map[m2index(orb.m)] += 1
+        else
+            n_m_map[m2index(orb.m)] += 1
         end
-        pconfigs = temp
-    end
-    hist_pM = Dict{Int16, Int64}()
-    for (D, MM) in pconfigs
-        hist_pM[MM] = get(hist_pM, MM, 0) + 1
     end
 
+    hist_pM = Dict{Int, BigInt}()
+    p_ptn = partition(Z, p_m_map)
+    for line in p_ptn
+        num = big(1)
+        m = 0
+        for idx = 1:length(line)
+            m += line[idx] * index2m(idx)
+            num *= binomial(big(p_m_map[idx]), big(line[idx]))
+        end
+        hist_pM[m] = get(hist_pM, m, big(0)) + num
+    end
+    p_ptn = nothing
     GC.gc()
 
-    # 中子部分的组态
-    nconfigs::Vector{Pair{BitArray{1},Int16}} = [BitArray(zeros(n_size)) => 0]
-    for _i in 1:N
-        temp = []
-        for (D, MM) in nconfigs
-            idx = findfirst(D)
-            (idx === nothing) && (idx = n_size + 1)
-            for k in 1:idx-1
-                Dx = copy(D)
-                Dx[k] = true
-                MMx = MM + n_orbits[k].m
-                push!(temp, Dx => MMx)
-            end
+    hist_nM = Dict{Int, BigInt}()
+    n_ptn = partition(N, n_m_map)
+    for line in n_ptn
+        num = big(1)
+        m = 0
+        for idx = 1:length(line)
+            m += line[idx] * index2m(idx)
+            num *= binomial(big(n_m_map[idx]), big(line[idx]))
         end
-        nconfigs = temp
+        hist_nM[m] = get(hist_nM, m, big(0)) + num
     end
-    hist_nM = Dict{Int16, Int64}()
-    for (D, MM) in nconfigs
-        hist_nM[MM] = get(hist_nM, MM, 0) + 1
-    end
-
+    n_ptn = nothing
     GC.gc()
 
-    sum::Int64 = 0
-    target::Int16 = isodd(N + Z)
+    sum::BigInt = 0
+    target = isodd(N + Z)
     for (pm, pnum) in hist_pM
         for (nm, nnum) in hist_nM
             if pm + nm == target
