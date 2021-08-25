@@ -317,6 +317,24 @@ function partition(n::Int, capacities::AbstractArray)
     return result
 end
 
+"""
+    binominal_safe(n::Integer, m::Integer)
+判断这个二项式系数是否会溢出。
+"""
+function binominal_safe(n::Integer, m::Integer)
+    n, m = promote(n, m)
+    try
+        binomial(n, m)
+    catch err
+        if isa(err, OverflowError)
+            return false
+        else
+            throw(err)
+        end
+    end
+    return true
+end
+
 # 对于 julia 来说，`~m = -m - 1` 的小trick就不好用了
 # 不过应该也无伤大雅
 @inline m2index(m::Int) = m >= 0 ? m : (-m + 1)
@@ -331,8 +349,8 @@ function m_config_size(ns::NuclearShell, Z::Integer, N::Integer)
     orbits = m_orbits(ns)
     orbit_number = msize(ns)
 
-    p_m_map = zeros(Int, max_pj(ns) + 1)
-    n_m_map = zeros(Int, max_nj(ns) + 1)
+    p_m_map = zeros(Int64, max_pj(ns) + 1)
+    n_m_map = zeros(Int64, max_nj(ns) + 1)
 
     for orb in orbits
         if orb.tz == -1
@@ -341,6 +359,8 @@ function m_config_size(ns::NuclearShell, Z::Integer, N::Integer)
             n_m_map[m2index(orb.m)] += 1
         end
     end
+    @assert binominal_safe(maximum(p_m_map), Z) "binomial of Int64 may overflow"
+    @assert binominal_safe(maximum(n_m_map), N) "binomial of Int64 may overflow"
 
     hist_pM = Dict{Int, BigInt}()
     p_ptn = partition(Z, p_m_map)
@@ -349,7 +369,7 @@ function m_config_size(ns::NuclearShell, Z::Integer, N::Integer)
         m = 0
         for idx = 1:length(line)
             m += line[idx] * index2m(idx)
-            num *= binomial(big(p_m_map[idx]), big(line[idx]))
+            num *= binomial(p_m_map[idx], line[idx])
         end
         hist_pM[m] = get(hist_pM, m, big(0)) + num
     end
@@ -363,7 +383,7 @@ function m_config_size(ns::NuclearShell, Z::Integer, N::Integer)
         m = 0
         for idx = 1:length(line)
             m += line[idx] * index2m(idx)
-            num *= binomial(big(n_m_map[idx]), big(line[idx]))
+            num *= binomial(n_m_map[idx], line[idx])
         end
         hist_nM[m] = get(hist_nM, m, big(0)) + num
     end
