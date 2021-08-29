@@ -301,19 +301,25 @@ end
 """
 function partition(n::Int, capacities::AbstractArray)
     result = Vector{Vector{Int}}()
-    next = (n::Int, caps::Vector{Int}, line::Vector{Int}) -> begin
-        if length(caps) == 1
-            if n <= caps[1]
-                push!(result, vcat(line, n))
+    cap_size = length(capacities)
+    next = (n::Int, pos::Int, line::Vector{Int}) -> begin
+        if pos == cap_size
+            if n <= capacities[end]
+                xline = copy(line)
+                xline[end] = n
+                push!(result, xline)
             end
         else
-            for i = 0:min(n, caps[1])
-                next(n - i, copy(caps[2:end]), vcat(line, i))
+            for i = 0:min(n, capacities[pos])
+                xline = copy(line)
+                xline[pos] = i
+                next(n - i, pos + 1, xline)
             end
         end
         nothing
     end
-    next(n, capacities, Int[])
+    line = zeros(Int, length(capacities))
+    next(n, 1, line)
     return result
 end
 
@@ -362,30 +368,30 @@ function m_config_size(ns::NuclearShell, Z::Integer, N::Integer)
     @assert binominal_safe(maximum(p_m_map), Z) "binomial of Int64 may overflow"
     @assert binominal_safe(maximum(n_m_map), N) "binomial of Int64 may overflow"
 
-    hist_pM = Dict{Int, BigInt}()
+    hist_pM = Dict{Int, Int128}()
     p_ptn = partition(Z, p_m_map)
     for line in p_ptn
-        num = big(1)
+        num = Int128(1)
         m = 0
         for idx = 1:length(line)
             m += line[idx] * index2m(idx)
             num *= binomial(p_m_map[idx], line[idx])
         end
-        hist_pM[m] = get(hist_pM, m, big(0)) + num
+        hist_pM[m] = get(hist_pM, m, Int128(0)) + num
     end
     p_ptn = nothing
     GC.gc()
 
-    hist_nM = Dict{Int, BigInt}()
+    hist_nM = Dict{Int, Int128}()
     n_ptn = partition(N, n_m_map)
     for line in n_ptn
-        num = big(1)
+        num = Int128(1)
         m = 0
         for idx = 1:length(line)
             m += line[idx] * index2m(idx)
             num *= binomial(n_m_map[idx], line[idx])
         end
-        hist_nM[m] = get(hist_nM, m, big(0)) + num
+        hist_nM[m] = get(hist_nM, m, Int128(0)) + num
     end
     n_ptn = nothing
     GC.gc()
