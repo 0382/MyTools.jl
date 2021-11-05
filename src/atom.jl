@@ -13,11 +13,10 @@ using Markdown
 构造函数：
 ```julia
 Element(Z, sym, chinese, english, latin, pinyin)
-Element(ele::Element)
-Element(Z::Integer)
-Element(symbol::Union{AbstractString, Symbol})
+Element(ele::Element)                         # identity
+Element(Z::Integer)                           # 从原子序数构造
+Element(name::Union{AbstractString, Symbol})  # 从任何名称构造，比如 "Fe", "铝", "Oxygen"
 ```
-其中最后两个表示使用原子序数构造和使用元素符号构造元素。
 """
 struct Element
     atomic_number::Int
@@ -32,23 +31,8 @@ end # struct Element
 "不存在的元素"
 const NoneElement = Element(-1, "", "", "", "", "")
 
-"判断不存在的元素"
-is_none(ele::Element)::Bool = ele.atomic_number == -1
-
-"获取原子序数"
-getZ(ele::Element) = ele.atomic_number
-"获取原子序数"
-atomic_number(ele::Element) = ele.atomic_number
-"获取元素符号"
-symbol(ele::Element) = ele.symbol_name
-"获取元素中文名"
-chinese(ele::Element) = ele.chinese_name
-"获取元素英文名"
-english(ele::Element) = ele.english_name
-"获取元素拉丁文名"
-latin(ele::Element) = ele.latin_name
-"获取元素中文名拼音"
-pinyin(ele::Element) = ele.pinyin_name
+"判断是否为不存在的元素"
+is_none(ele::Element)::Bool = !(1 <= ele.atomic_number <= 118)
 
 "元素周期表"
 const element_table = [
@@ -173,7 +157,7 @@ const element_table = [
 ]
 
 "通过原子序数查找元素"
-find_element_with_Z(Z::Integer) = (Z < 1 && Z > 118) ? NoneElement : element_table[Z]
+find_element_with_Z(Z::Integer) = (1 <= Z <= 118) ? element_table[Z] : NoneElement
 
 "通过元素符号查找元素"
 function find_element_with_symbol(sym::AbstractString)
@@ -195,7 +179,7 @@ end
 
 "通过元素拉丁文名查找元素"
 function find_element_with_latin(latin::AbstractString)
-    pos = findfirst(ele -> ele.latin_name == latin, element_table)
+    pos = findfirst(ele -> match(Regex("\\b" * latin * "\\b"), ele.latin_name) !== nothing, element_table)
     pos === nothing ? NoneElement : element_table[pos]
 end
 
@@ -221,4 +205,20 @@ end
 
 Element(ele::Element) = ele
 Element(Z::Integer) = find_element_with_Z(Z)
-Element(symbol::Union{AbstractString, Symbol}) = find_element_with_symbol(string(symbol))
+Element(name::Union{AbstractString, Symbol}) = find_element(string(name))
+
+const ElementConstructType = Union{Element, Integer, AbstractString, Symbol}
+"获取原子序数"
+getZ(ele::ElementConstructType) = Element(ele).atomic_number
+"获取原子序数"
+atomic_number(ele::ElementConstructType) = Element(ele).atomic_number
+"获取元素符号"
+symbol(ele::ElementConstructType) = Element(ele).symbol_name
+"获取元素中文名"
+chinese(ele::ElementConstructType) = Element(ele).chinese_name
+"获取元素英文名"
+english(ele::ElementConstructType) = Element(ele).english_name
+"获取元素拉丁文名"
+latin(ele::ElementConstructType) = Element(ele).latin_name
+"获取元素中文名拼音"
+pinyin(ele::ElementConstructType) = Element(ele).pinyin_name

@@ -329,6 +329,7 @@ end
 """
 function binominal_safe(n::Integer, m::Integer)
     n, m = promote(n, m)
+    m = min(m, div(n, 2))
     try
         binomial(n, m)
     catch err

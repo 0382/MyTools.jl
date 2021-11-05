@@ -2,7 +2,7 @@ module MyTools
 
 module Atom
     include("atom.jl")
-    export Element, NoneElement, is_none,
+    export Element, NoneElement, is_none, ElementConstructType,
         getZ, atomic_number, symbol, chinese, english, latin, pinyin,
         find_element_with_Z,
         find_element_with_symbol,
