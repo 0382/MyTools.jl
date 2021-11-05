@@ -43,6 +43,7 @@ chinese
 english
 latin
 pinyin
+show_element_table
 find_element_with_Z
 find_element_with_symbol
 find_element_with_chinese

@@ -366,8 +366,8 @@ function m_config_size(ns::NuclearShell, Z::Integer, N::Integer)
             n_m_map[m2index(orb.m)] += 1
         end
     end
-    # @assert binominal_safe(maximum(p_m_map), Z) "binomial of Int64 may overflow"
-    # @assert binominal_safe(maximum(n_m_map), N) "binomial of Int64 may overflow"
+    @assert binominal_safe(maximum(p_m_map), Z) "binomial of Int64 may overflow"
+    @assert binominal_safe(maximum(n_m_map), N) "binomial of Int64 may overflow"
 
     hist_pM = Dict{Int, Int128}()
     p_ptn = partition(Z, p_m_map)

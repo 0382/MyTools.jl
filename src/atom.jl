@@ -222,3 +222,66 @@ english(ele::ElementConstructType) = Element(ele).english_name
 latin(ele::ElementConstructType) = Element(ele).latin_name
 "获取元素中文名拼音"
 pinyin(ele::ElementConstructType) = Element(ele).pinyin_name
+
+"""
+    show_element_table(type::AbstractString="symbol")
+打印元素周期表，`type`可以是`"symbol", "chinese"`两种
+"""
+function show_element_table(type::AbstractString="symbol")
+    choose_field = nothing
+    use_space = ""
+    if type == "symbol"
+        choose_field = symbol
+        use_space = "  "
+    elseif type == "chinese"
+        choose_field = chinese
+        use_space = "\u3000"
+    else
+        throw(ArgumentError("invalid element table type: $type"))
+    end
+    # 第一行
+    str = @sprintf("%-2s%s %-2s\n", choose_field(Element(1)), repeat(" " * use_space, 16), choose_field(Element(2)))
+    # 第二、三行
+    for line = 2:3
+        start = (line - 2) * 8 + 3
+        for z = start:start+1
+            str = str * @sprintf("%-2s ", choose_field(Element(z)))
+        end
+        str = str * repeat(use_space * " ", 10)
+        for z = start+2:start+6
+            str = str * @sprintf("%-2s ", choose_field(Element(z)))
+        end
+        str = str * @sprintf("%-2s\n", choose_field(Element(start+7)))
+    end
+    # 第四、五行
+    for line = 4:5
+        start = (line - 4) * 18 + 19
+        for z = start:start+16
+            str = str * @sprintf("%-2s ", choose_field(Element(z)))
+        end
+        str = str * @sprintf("%-2s\n", choose_field(Element(start + 17)))
+    end
+    # 第六、七行
+    for line = 6:7
+        start = (line - 6) * 32 + 55
+        for z = start:start+2
+            str = str * @sprintf("%-2s ", choose_field(Element(z)))
+        end
+        for z = start+17:start+30
+            str = str * @sprintf("%-2s ", choose_field(Element(z)))
+        end
+        str = str * @sprintf("%-2s\n", choose_field(Element(start + 31)))
+    end
+    str = str * repeat(use_space * " ", 17) * use_space * "\n"
+    # 附加行
+    for line = 6:7
+        str = str * repeat(use_space * " ", 2)
+        start = (line - 6) * 32 + 57
+        for z = start:start+14
+            str = str * @sprintf("%-2s ", choose_field(Element(z)))
+        end
+        str = str * repeat(use_space * " ", 7)
+        str = str * use_space * "\n"
+    end
+    print(str)
+end

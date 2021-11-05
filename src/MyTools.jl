@@ -1,6 +1,7 @@
 module MyTools
 
 module Atom
+    using Printf
     include("atom.jl")
     export Element, NoneElement, is_none, ElementConstructType,
         getZ, atomic_number, symbol, chinese, english, latin, pinyin,
@@ -10,7 +11,8 @@ module Atom
         find_element_with_english,
         find_element_with_latin,
         find_element_with_pinyin,
-        find_element
+        find_element,
+        show_element_table
 end # module AtomName
 
 module Nucleus
