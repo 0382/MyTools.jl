@@ -1,5 +1,10 @@
 module MyTools
 
+using LinearAlgebra
+
+include("vec.jl")
+export Vec, Vec2, Vec3, Vec4
+
 module Atom
     using Printf
     include("atom.jl")
