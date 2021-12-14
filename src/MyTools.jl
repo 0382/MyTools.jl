@@ -4,6 +4,8 @@ using LinearAlgebra
 
 include("vec.jl")
 export Vec, Vec2, Vec3, Vec4
+include("pauli.jl")
+export σ0, σx, σy, σz, σv, ⊗
 
 module Atom
     using Printf
