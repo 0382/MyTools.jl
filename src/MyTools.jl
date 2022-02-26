@@ -7,6 +7,14 @@ export Vec, Vec2, Vec3, Vec4
 include("pauli.jl")
 export σ0, σx, σy, σz, σv, ⊗
 
+module Chinese
+    include("chinese.jl")
+    export chinese_digit, chinese_digits,
+        chinese_number,
+        parse_chinese,
+        parse_chinese_digit
+end
+
 module Atom
     using Printf
     include("atom.jl")

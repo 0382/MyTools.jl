@@ -200,6 +200,32 @@ const pf_shell = NuclearShell([
     JOrbit(1, 1, 1, 1)
 ])
 
+const pfg_shell = NuclearShell([
+    JOrbit(0, 3, 7, -1),  # 0f7/2
+    JOrbit(0, 3, 7, 1),
+    JOrbit(1, 1, 3, -1),  # 1p3/2
+    JOrbit(1, 1, 3, 1),
+    JOrbit(0, 3, 5, -1),  # 0f5/2
+    JOrbit(0, 3, 5, 1),
+    JOrbit(1, 1, 1, -1),  # 1p1/2
+    JOrbit(1, 1, 1, 1),
+    JOrbit(0, 4, 9, -1),  # 0g9/2
+    JOrbit(0, 4, 9, 1),
+])
+
+const gdsh_shell = NuclearShell([
+    JOrbit(0, 4, 7, -1),  # 0g7/2
+    JOrbit(0, 4, 7, 1),
+    JOrbit(1, 2, 5, -1),  # 1d5/2
+    JOrbit(1, 2, 5, 1),
+    JOrbit(1, 2, 3, -1),  # 1d3/2
+    JOrbit(1, 2, 3, 1),
+    JOrbit(2, 0, 1, -1),  # 2s1/2
+    JOrbit(2, 0, 1, 1),
+    JOrbit(0, 5, 11, -1), # 0h11/2
+    JOrbit(0, 5, 11, 1)
+])
+
 """
     j_orbits(ns::NuclearShell)
 获得壳内所有的j-scheme轨道
@@ -493,3 +519,5 @@ end
 const p_space = ValenceSpace(2, 2, p_shell)
 const sd_space = ValenceSpace(8, 8, sd_shell)
 const pf_space = ValenceSpace(20, 20, pf_shell)
+const pfg_space = ValenceSpace(20, 20, pfg_shell)
+const gdsh_space = ValenceSpace(50, 50, gdsh_shell)
