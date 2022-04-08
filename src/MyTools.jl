@@ -6,6 +6,7 @@ include("vec.jl")
 export Vec, Vec2, Vec3, Vec4
 include("pauli.jl")
 export σ0, σx, σy, σz, σv, ⊗
+include("matrix.jl")
 
 module Chinese
     include("chinese.jl")
