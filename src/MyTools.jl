@@ -10,7 +10,7 @@ include("matrix.jl")
 
 module Chinese
     include("chinese.jl")
-    export chinese_digit, chinese_digits,
+    export chinese_digit,
         chinese_number,
         parse_chinese,
         parse_chinese_digit

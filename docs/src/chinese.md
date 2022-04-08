@@ -5,7 +5,6 @@
 ## 中文数字
 
 ```@docs
-chinese_digits
 chinese_digit
 chinese_number
 parse_chinese

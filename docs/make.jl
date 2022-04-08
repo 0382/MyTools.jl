@@ -5,6 +5,7 @@ using MyTools.Ini
 using MyTools.Tool
 using MyTools.Atom
 using MyTools.Nucleus
+using MyTools.Chinese
 
 makedocs(
     sitename="MyTools",
@@ -14,7 +15,8 @@ makedocs(
         "Ini" => "ini.md",
         "Tool" => "tool.md",
         "Atom" => "atom.md",
-        "Nucleus" => "nucleus.md"
+        "Nucleus" => "nucleus.md",
+        "Chinese" => "chinese.md"
     ]
 )
 
