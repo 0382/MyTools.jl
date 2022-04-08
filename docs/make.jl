@@ -17,3 +17,8 @@ makedocs(
         "Nucleus" => "nucleus.md"
     ]
 )
+
+deploydocs(
+    repo = "github.com/0382/MyTools.jl.git",
+    target = "build/"
+)
