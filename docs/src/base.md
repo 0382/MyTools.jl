@@ -21,6 +21,14 @@ Vec
 ⊗(::AbstractMatrix, ::AbstractMatrix)
 ```
 
+## `StaticBitVector`
+```@docs
+StaticBitVector
+count_ones_start
+count_ones_stop
+count_ones_in
+```
+
 ## 矩阵算法
 
 实现了稠密对称矩阵的LDLT分解。

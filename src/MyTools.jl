@@ -8,6 +8,12 @@ include("pauli.jl")
 export σ0, σx, σy, σz, σv, ⊗
 include("matrix.jl")
 
+include("static_bitvector.jl")
+export StaticBitVector,
+    count_ones_start,
+    count_ones_stop,
+    count_ones_in
+
 module Chinese
     include("chinese.jl")
     export chinese_digit,
