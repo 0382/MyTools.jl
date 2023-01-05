@@ -68,7 +68,8 @@ end # module Ini
 
 module Tool
     include("tool.jl")
-    export GPA, get_id_check_code, check_idcard
+    export GPA, get_id_check_code, check_idcard,
+        Fibonacci
 end # module Tool
 
 end # module MyTools
