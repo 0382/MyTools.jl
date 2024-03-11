@@ -22,6 +22,10 @@ module Chinese
         parse_chinese_digit
 end
 
+module Numeric
+    include("numeric.jl")
+end
+
 module Atom
     using Printf
     include("atom.jl")
@@ -67,9 +71,11 @@ module Ini
 end # module Ini
 
 module Tool
+    using ..Nucleus
     include("tool.jl")
     export GPA, get_id_check_code, check_idcard,
-        Fibonacci
+        Fibonacci_matrix, Fibonacci_coeff,
+        make_kshell_pp, make_kshell_pn, make_kshell_np, make_kshell_nn
 end # module Tool
 
 end # module MyTools
