@@ -128,8 +128,8 @@ end
 "生成粒子粒子kshell_ui的输入文件"
 make_kshell_pp(io, snt, core, vp, vn) = make_kshell_script(io, snt, core, vp, vn, false, false)
 "生成粒子空穴kshell_ui的输入文件"
-make_kshell_pn(io, snt, core, vp, vn) = make_kshell_script(io, snt, core, vp, vn, false, true)
+make_kshell_ph(io, snt, core, vp, vn) = make_kshell_script(io, snt, core, vp, vn, false, true)
 "生成空穴粒子kshell_ui的输入文件"
-make_kshell_np(io, snt, core, vp, vn) = make_kshell_script(io, snt, core, vp, vn, true, false)
+make_kshell_hp(io, snt, core, vp, vn) = make_kshell_script(io, snt, core, vp, vn, true, false)
 "生成空穴空穴kshell_ui的输入文件"
-make_kshell_nn(io, snt, core, vp, vn) = make_kshell_script(io, snt, core, vp, vn, true, true)
+make_kshell_hh(io, snt, core, vp, vn) = make_kshell_script(io, snt, core, vp, vn, true, true)

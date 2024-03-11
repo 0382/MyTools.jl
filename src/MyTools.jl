@@ -75,7 +75,7 @@ module Tool
     include("tool.jl")
     export GPA, get_id_check_code, check_idcard,
         Fibonacci_matrix, Fibonacci_coeff,
-        make_kshell_pp, make_kshell_pn, make_kshell_np, make_kshell_nn
+        make_kshell_pp, make_kshell_ph, make_kshell_hp, make_kshell_hh
 end # module Tool
 
 end # module MyTools

@@ -2,6 +2,7 @@
 # @description: ini文件读取
 # 
 
+import Base
 
 
 "A `key = value` item."
@@ -26,6 +27,9 @@ struct IniFile
     err_msg::String
     IniFile(secs::Vector{IniSection}, good::Bool, msg::AbstractString) = new(secs, good, msg)
 end
+
+Base.iterate(ini::IniFile, state = 1) = state > length(ini.sections) ? nothing : (ini.sections[state], state + 1)
+Base.iterate(sec::IniSection, state = 1) = state > length(sec.items) ? nothing : ((sec.items[state].key, sec.items[state].value), state + 1)
 
 """
     isgood(ini::IniFile)
