@@ -1,3 +1,5 @@
+using Combinatorics
+
 
 """
     GPA(score::Int)::Float64
@@ -87,49 +89,239 @@ function Fibonacci_coeff(n::Integer)::BigInt
     return x2
 end
 
-function make_kshell_script(io::IO, snt::AbstractString, core::Union{Isotope, AbstractString}, vp::Union{AbstractVector, Integer}, vn::Union{AbstractVector, Integer}, p_is_hole::Bool, n_is_hole::Bool)
-    if !isa(vp, AbstractVector)
-        vp = [vp]
-    end
-    if !isa(vn, AbstractVector)
-        vn = [vn]
-    end
-    core = Isotope(core)
-    println(io, "N")
-    println(io, snt, ".snt")
-    for δp in vp
-        for δn in vn
-            if δp == 0 && δn == 0
-                continue
-            end
-            println(io, δp, ",", δn)
-            if p_is_hole && n_is_hole
-                iso = Isotope(core, -δp, -δn)
-            elseif p_is_hole && !n_is_hole
-                iso = Isotope(core, -δp, δn)
-            elseif !p_is_hole && n_is_hole
-                iso = Isotope(core, δp, -δn)
-            else
-                iso = Isotope(core, δp, δn)
-            end
-            show(io, "text/plain", iso)
-            println(io, "_", snt)
-            println(io, 10)
-            println(io, 0)
-            println(io, "")
-            println(io, "N")
-        end
-    end
-    for _ in 1:10
-        println(io, "")
+# 24点游戏节点
+struct Node24
+    value::Rational{Int}
+    childs::Vector{Node24}
+    ops::Vector{Char}
+    level::Int
+    function Node24(value::Rational{Int}, childs::Vector{Node24}, ops::Vector{Char}, level::Int)
+        new(value, childs, ops, level)
     end
 end
 
-"生成粒子粒子kshell_ui的输入文件"
-make_kshell_pp(io, snt, core, vp, vn) = make_kshell_script(io, snt, core, vp, vn, false, false)
-"生成粒子空穴kshell_ui的输入文件"
-make_kshell_ph(io, snt, core, vp, vn) = make_kshell_script(io, snt, core, vp, vn, false, true)
-"生成空穴粒子kshell_ui的输入文件"
-make_kshell_hp(io, snt, core, vp, vn) = make_kshell_script(io, snt, core, vp, vn, true, false)
-"生成空穴空穴kshell_ui的输入文件"
-make_kshell_hh(io, snt, core, vp, vn) = make_kshell_script(io, snt, core, vp, vn, true, true)
+Node24(value::Rational{Int}, childs::Vector{Node24}, ops::Vector{Char}) = Node24(value, childs, ops, 0)
+Node24(value::Rational{Int}) = Node24(value, Node24[], Char[])
+Node24(value::Integer) = Node24(Rational{Int}(value))
+
+function _show(node::Node24, final::Bool)
+    if isempty(node.childs)
+        string(numerator(node.value))
+    else
+        s = _show(node.childs[1], false)
+        for i = 1:length(node.ops)
+            s *= " $(node.ops[i]) $(_show(node.childs[i+1], false))"
+        end
+        return (node.level == 1 && !final) ? "($s)" : s
+    end    
+end
+
+Base.show(io::IO, node::Node24) = begin
+    print(io, _show(node, true))
+end
+
+function _split(v::AbstractVector{Node24}, n::Int)
+    n >= length(v) && throw(ArgumentError("n = $n should be less than length(v) = $(length(v))"))
+    ans = []
+    for c in combinations(1:length(v), n)
+        push!(ans, [v[c], v[setdiff(1:length(v), c)]])
+    end
+    return ans
+end
+
+function _24point_lv1(v::AbstractVector{Node24})
+    n = length(v)
+    ans = []
+    for mask = 1:((1<<n) - 1)
+        sum = 0
+        ops = Char[]
+        skip = false
+        for i = 1:n
+            if !iszero(mask & (1<<(i-1)))
+                sum += v[i].value
+                push!(ops, '+')
+            else
+                if iszero(v[i].value) # 等于0时和加法等价
+                    skip = true
+                    break
+                end
+                sum -= v[i].value
+                push!(ops, '-')
+            end
+        end
+        skip && continue
+        sum < 0 && continue # 结果为正数时，总是可以期待每个节点都是正数
+        first_plus = trailing_zeros(mask) + 1
+        w = copy(v)
+        if first_plus != 1
+            w[first_plus], w[1] = w[1], w[first_plus]
+            ops[first_plus], ops[1] = ops[1], ops[first_plus]
+        end
+        push!(ans, Node24(sum, w, ops[2:end], 1))
+    end
+    return ans
+end
+
+function _24point_lv2(v::AbstractVector{Node24})
+    n = length(v)
+    ans = []
+    for mask = 1:((1<<n) - 1)
+        pord = 1//1
+        ops = Char[]
+        skip = false
+        for i = 1:n
+            if !iszero(mask & (1<<(i-1)))
+                pord *= v[i].value
+                push!(ops, '*')
+            else
+                if isone(v[i].value) || iszero(v[i].value) # 等于1时和乘法等价
+                    skip = true
+                    continue
+                end
+                pord //= v[i].value
+                push!(ops, '/')
+            end
+        end
+        skip && continue
+        first_mul = trailing_zeros(mask) + 1
+        w = copy(v)
+        if first_mul != 1
+            w[first_mul], w[1] = w[1], w[first_mul]
+            ops[first_mul], ops[1] = ops[1], ops[first_mul]
+        end
+        push!(ans, Node24(pord, w, ops[2:end], 2))
+    end
+    return ans
+end
+
+function build_24_nodes(v::AbstractVector{Node24})
+    n = length(v)
+    n == 1 && return v
+    lv = 0
+    for i = 1:n
+        v[i].level == 0 && continue
+        if lv == 0
+            lv = v[i].level
+        else
+            lv != v[i].level && return
+        end
+    end
+    if n == 2
+        ans = []
+        if lv != 1
+            push!(ans, Node24(v[1].value + v[2].value, [v[1], v[2]], ['+'], 1))
+            # 如果结果是正数，总是可以期待每个节点都是正数
+            if v[1].value < v[2].value
+                push!(ans, Node24(v[2].value - v[1].value, [v[2], v[1]], ['-'], 1))
+            else
+                push!(ans, Node24(v[1].value - v[2].value, [v[1], v[2]], ['-'], 1))
+            end
+        end
+        if lv != 2
+            push!(ans, Node24(v[1].value * v[2].value, [v[1], v[2]], ['*'], 2))
+            if !iszero(v[2].value)
+                push!(ans, Node24(v[1].value // v[2].value, [v[1], v[2]], ['/'], 2))
+            end
+            if !iszero(v[1].value)
+                push!(ans, Node24(v[2].value // v[1].value, [v[2], v[1]], ['/'], 2))
+            end
+        end
+        return ans
+    end
+    if n == 3
+        ans = []
+        if lv != 1
+            ans = vcat(ans, _24point_lv1(v))
+        end
+        if lv != 2
+            ans = vcat(ans, _24point_lv2(v))
+        end
+        st = Set{Rational{Int}}()
+        for i = 1:n
+            v[i].value in st && continue
+            push!(st, v[i].value)
+            t = copy(v)
+            deleteat!(t, i)
+            if lv != 1
+                for x in _24point_lv1(t)
+                    ans = vcat(ans, _24point_lv2([x, v[i]]))
+                end
+            end
+            if lv != 2
+                for x in _24point_lv2(t)
+                    ans = vcat(ans, _24point_lv1([x, v[i]]))
+                end
+            end
+        end
+        return ans
+    end
+    ans = []
+    if lv != 1
+        ans = vcat(ans, _24point_lv1(v))
+        for (a, b) in _split(v, 3)
+            ta = _24point_lv1(a)
+            for x in ta
+                ans = vcat(ans, _24point_lv2([x, b[1]]))
+            end
+        end
+        for (a, b) in _split(v, 2)
+            ta = _24point_lv1(a)
+            tb = _24point_lv1(b)
+            for x in ta
+                for y in tb
+                    ans = vcat(ans, _24point_lv2([x, y]))
+                end
+            end
+            for x in ta
+                ans = vcat(ans, _24point_lv2([x, b[1], b[2]]))
+                for y in _24point_lv2([x, b[1]])
+                    ans = vcat(ans, _24point_lv1([y, b[2]]))
+                end
+                for y in _24point_lv2([x, b[2]])
+                    ans = vcat(ans, _24point_lv1([y, b[1]]))
+                end
+            end
+        end
+    end
+    if lv != 2
+        ans = vcat(ans, _24point_lv2(v))
+        for (a, b) in _split(v, 3)
+            ta = _24point_lv2(a)
+            for x in ta
+                ans = vcat(ans, _24point_lv1([x, b[1]]))
+            end
+        end
+        for (a, b) in _split(v, 2)
+            ta = _24point_lv2(a)
+            tb = _24point_lv2(b)
+            for x in ta
+                for y in tb
+                    ans = vcat(ans, _24point_lv1([x, y]))
+                end
+            end
+            for x in ta
+                ans = vcat(ans, _24point_lv1([x, b[1], b[2]]))
+                for y in _24point_lv1([x, b[1]])
+                    ans = vcat(ans, _24point_lv2([y, b[2]]))
+                end
+                for y in _24point_lv1([x, b[2]])
+                    ans = vcat(ans, _24point_lv2([y, b[1]]))
+                end
+            end
+        end
+    end
+    return ans
+end
+
+function play_24game(v::AbstractVector{T}) where T<:Integer
+    n = length(v)
+    nodes = Node24.(v)
+    t = build_24_nodes(nodes)
+    ans = Node24[]
+    for x in t
+        if x.value == 24
+            push!(ans, x)
+        end
+    end
+    return ans
+end
