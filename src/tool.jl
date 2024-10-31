@@ -1,6 +1,3 @@
-using Combinatorics
-
-
 """
     GPA(score::Int)::Float64
 北大 GPA 计算公式
@@ -120,15 +117,6 @@ Base.show(io::IO, node::Node24) = begin
     print(io, _show(node, true))
 end
 
-function _split(v::AbstractVector{Node24}, n::Int)
-    n >= length(v) && throw(ArgumentError("n = $n should be less than length(v) = $(length(v))"))
-    ans = []
-    for c in combinations(1:length(v), n)
-        push!(ans, [v[c], v[setdiff(1:length(v), c)]])
-    end
-    return ans
-end
-
 function _24point_lv1(v::AbstractVector{Node24})
     n = length(v)
     ans = []
@@ -166,19 +154,19 @@ function _24point_lv2(v::AbstractVector{Node24})
     n = length(v)
     ans = []
     for mask = 1:((1<<n) - 1)
-        pord = 1//1
+        prod = 1//1
         ops = Char[]
         skip = false
         for i = 1:n
             if !iszero(mask & (1<<(i-1)))
-                pord *= v[i].value
+                prod *= v[i].value
                 push!(ops, '*')
             else
                 if isone(v[i].value) || iszero(v[i].value) # 等于1时和乘法等价
                     skip = true
                     continue
                 end
-                pord //= v[i].value
+                prod //= v[i].value
                 push!(ops, '/')
             end
         end
@@ -189,12 +177,24 @@ function _24point_lv2(v::AbstractVector{Node24})
             w[first_mul], w[1] = w[1], w[first_mul]
             ops[first_mul], ops[1] = ops[1], ops[first_mul]
         end
-        push!(ans, Node24(pord, w, ops[2:end], 2))
+        push!(ans, Node24(prod, w, ops[2:end], 2))
     end
     return ans
 end
 
-function build_24_nodes(v::AbstractVector{Node24})
+function _24point_lv(v::AbstractVector{Node24}, level)
+    level == 1 && return _24point_lv1(v)
+    level == 2 && return _24point_lv2(v)
+    return Node24[]
+end
+
+function _next_lv(level)
+    level == 1 && return 2
+    level == 2 && return 1
+    return 0
+end
+
+function build_24_nodes(v::AbstractVector{Node24}, level)
     n = length(v)
     n == 1 && return v
     lv = 0
@@ -203,109 +203,43 @@ function build_24_nodes(v::AbstractVector{Node24})
         if lv == 0
             lv = v[i].level
         else
-            lv != v[i].level && return
+            lv != v[i].level && return Node24[]
         end
     end
-    if n == 2
-        ans = []
-        if lv != 1
-            push!(ans, Node24(v[1].value + v[2].value, [v[1], v[2]], ['+'], 1))
-            # 如果结果是正数，总是可以期待每个节点都是正数
-            if v[1].value < v[2].value
-                push!(ans, Node24(v[2].value - v[1].value, [v[2], v[1]], ['-'], 1))
-            else
-                push!(ans, Node24(v[1].value - v[2].value, [v[1], v[2]], ['-'], 1))
-            end
-        end
-        if lv != 2
-            push!(ans, Node24(v[1].value * v[2].value, [v[1], v[2]], ['*'], 2))
-            if !iszero(v[2].value)
-                push!(ans, Node24(v[1].value // v[2].value, [v[1], v[2]], ['/'], 2))
-            end
-            if !iszero(v[1].value)
-                push!(ans, Node24(v[2].value // v[1].value, [v[2], v[1]], ['/'], 2))
-            end
-        end
-        return ans
-    end
+    (lv != 0 && lv == level) && return Node24[]
+    n == 2 && return _24point_lv(v, level)
     if n == 3
-        ans = []
-        if lv != 1
-            ans = vcat(ans, _24point_lv1(v))
-        end
-        if lv != 2
-            ans = vcat(ans, _24point_lv2(v))
-        end
+        ans = _24point_lv(v, level)
         st = Set{Rational{Int}}()
         for i = 1:n
-            v[i].value in st && continue
+            v[i].value in st && continue # 简单的剪枝，不能完全去重
             push!(st, v[i].value)
-            t = copy(v)
-            deleteat!(t, i)
-            if lv != 1
-                for x in _24point_lv1(t)
-                    ans = vcat(ans, _24point_lv2([x, v[i]]))
-                end
-            end
-            if lv != 2
-                for x in _24point_lv2(t)
-                    ans = vcat(ans, _24point_lv1([x, v[i]]))
-                end
+            w = copy(v)
+            deleteat!(w, i)
+            for t in _24point_lv(w, _next_lv(level))
+                ans = vcat(ans, _24point_lv([v[i], t], level))
             end
         end
         return ans
     end
-    ans = []
-    if lv != 1
-        ans = vcat(ans, _24point_lv1(v))
-        for (a, b) in _split(v, 3)
-            ta = _24point_lv1(a)
-            for x in ta
-                ans = vcat(ans, _24point_lv2([x, b[1]]))
-            end
-        end
-        for (a, b) in _split(v, 2)
-            ta = _24point_lv1(a)
-            tb = _24point_lv1(b)
-            for x in ta
-                for y in tb
-                    ans = vcat(ans, _24point_lv2([x, y]))
-                end
-            end
-            for x in ta
-                ans = vcat(ans, _24point_lv2([x, b[1], b[2]]))
-                for y in _24point_lv2([x, b[1]])
-                    ans = vcat(ans, _24point_lv1([y, b[2]]))
-                end
-                for y in _24point_lv2([x, b[2]])
-                    ans = vcat(ans, _24point_lv1([y, b[1]]))
-                end
-            end
+    ans = _24point_lv(v, level)
+    st = Set{Rational{Int}}()
+    for i = 1:n
+        v[i].value in st && continue
+        push!(st, v[i].value)
+        w = copy(v)
+        deleteat!(w, i)
+        for t in build_24_nodes(w, _next_lv(level))
+            ans = vcat(ans, _24point_lv([v[i], t], level))
         end
     end
-    if lv != 2
-        ans = vcat(ans, _24point_lv2(v))
-        for (a, b) in _split(v, 3)
-            ta = _24point_lv2(a)
-            for x in ta
-                ans = vcat(ans, _24point_lv1([x, b[1]]))
-            end
-        end
-        for (a, b) in _split(v, 2)
-            ta = _24point_lv2(a)
-            tb = _24point_lv2(b)
-            for x in ta
-                for y in tb
-                    ans = vcat(ans, _24point_lv1([x, y]))
-                end
-            end
-            for x in ta
-                ans = vcat(ans, _24point_lv1([x, b[1], b[2]]))
-                for y in _24point_lv1([x, b[1]])
-                    ans = vcat(ans, _24point_lv2([y, b[2]]))
-                end
-                for y in _24point_lv1([x, b[2]])
-                    ans = vcat(ans, _24point_lv2([y, b[1]]))
+
+    for i in 1:n
+        for j in (i+1):n
+            w = v[setdiff(1:n, [i, j])]
+            for t1 in _24point_lv([v[i], v[j]], _next_lv(level))
+                for t2 in _24point_lv(w, _next_lv(level))
+                    ans = vcat(ans, _24point_lv([t1, t2], level))
                 end
             end
         end
@@ -313,12 +247,20 @@ function build_24_nodes(v::AbstractVector{Node24})
     return ans
 end
 
+"""
+    play_24game(v::AbstractVector{T}) where T<:Integer
+24点游戏，给定4个整数，返回所有可能的表达式
+"""
 function play_24game(v::AbstractVector{T}) where T<:Integer
     n = length(v)
     nodes = Node24.(v)
-    t = build_24_nodes(nodes)
     ans = Node24[]
-    for x in t
+    for x in build_24_nodes(nodes, 1)
+        if x.value == 24
+            push!(ans, x)
+        end
+    end
+    for x in build_24_nodes(nodes, 2)
         if x.value == 24
             push!(ans, x)
         end
