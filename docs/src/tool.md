@@ -6,5 +6,4 @@
 GPA
 get_id_check_code
 check_idcard
-play_24game
 ```

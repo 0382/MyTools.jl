@@ -78,4 +78,9 @@ module Tool
         play_24game
 end # module Tool
 
+module Game
+    include("game/24point.jl")
+    export Node24, play_24point
+end # module Game
+
 end # module MyTools
