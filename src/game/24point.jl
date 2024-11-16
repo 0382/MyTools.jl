@@ -110,6 +110,7 @@ end
 
 function make_24nodes(v::AbstractVector{Node24{T}}, level) where T <: Integer
     n = length(v)
+    n >= 6 && error("Not implemented yet for n >= 6")
     n == 1 && return v
     lv = 0
     for i = 1:n
@@ -122,37 +123,23 @@ function make_24nodes(v::AbstractVector{Node24{T}}, level) where T <: Integer
     end
     (lv != 0 && lv == level) && return Node24{T}[]
     n == 2 && return lv_24point(v, level)
+    
     next_level = _next_lv(level)
-    if n == 3
-        ans = lv_24point(v, level)
-        st = Set{typeof(v[1].value)}()
-        for i = 1:n
-            if v[i].level == 0
-                v[i].value in st && continue # 简单的剪枝，不能完全去重
-                push!(st, v[i].value)
-            end
-            w = copy(v)
-            deleteat!(w, i)
-            for t in lv_24point(w, next_level)
-                ans = vcat(ans, lv_24point([v[i], t], level))
-            end
+    ans = lv_24point(v, level)
+    st = Set{typeof(v[1].value)}()
+    for i = 1:n
+        if v[i].level == 0
+            v[i].value in st && continue # 简单的剪枝，不能完全去重
+            push!(st, v[i].value)
+        end
+        w = copy(v)
+        deleteat!(w, i)
+        for t in make_24nodes(w, next_level)
+            ans = vcat(ans, lv_24point([v[i], t], level))
         end
     end
+    
     if n == 4
-        ans = lv_24point(v, level)
-        st = Set{typeof(v[1].value)}()
-        for i = 1:n
-            if v[i].level == 0
-                v[i].value in st && continue # 简单的剪枝，不能完全去重
-                push!(st, v[i].value)
-            end
-            w = copy(v)
-            deleteat!(w, i)
-            for t in make_24nodes(w, next_level)
-                ans = vcat(ans, lv_24point([v[i], t], level))
-            end
-        end
-
         for i in 1:n
             for j in (i+1):n
                 for k in (i+1):n
@@ -169,7 +156,35 @@ function make_24nodes(v::AbstractVector{Node24{T}}, level) where T <: Integer
             end
         end
     end
-    n >= 5 && error("Not implemented yet")
+    if n == 5
+        for i in 1:n
+            for j in (i+1):n
+                w = v[setdiff(1:n, [i, j])]
+                for t3 in make_24nodes(w, next_level)
+                    # (1,1,3)
+                    ans = vcat(ans, lv_24point([v[i], v[j], t3], level))
+                    # (2,3)
+                    for t2 in lv_24point([v[i], v[j]], next_level)
+                        ans = vcat(ans, lv_24point([t2, t3], level))
+                    end
+                end
+                # (1,2,2)
+                for k in (i+1):n
+                    k == j && continue
+                    for l in (k+1):n
+                        l == j && continue
+                        last = setdiff(1:n, [i, j, k, l])
+                        last = last[1]
+                        for t1 in lv_24point([v[i], v[j]], next_level)
+                            for t2 in lv_24point([v[k], v[l]], next_level)
+                                ans = vcat(ans, lv_24point([t1, t2, v[last]], level))
+                            end
+                        end
+                    end
+                end
+            end
+        end
+    end
     return ans
 end
 
