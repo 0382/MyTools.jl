@@ -6,6 +6,7 @@ using MyTools.Tool
 using MyTools.Atom
 using MyTools.Nucleus
 using MyTools.Chinese
+using MyTools.Game
 
 makedocs(
     sitename="MyTools",
