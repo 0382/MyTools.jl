@@ -16,7 +16,8 @@ makedocs(
         "Tool" => "tool.md",
         "Atom" => "atom.md",
         "Nucleus" => "nucleus.md",
-        "Chinese" => "chinese.md"
+        "Chinese" => "chinese.md",
+        "Game" => "game.md",
     ]
 )
 

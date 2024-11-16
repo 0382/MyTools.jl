@@ -160,6 +160,10 @@ function make_24nodes(v::AbstractVector{Node24{T}}, level) where T <: Integer
         for i in 1:n
             for j in (i+1):n
                 w = v[setdiff(1:n, [i, j])]
+                # (2,1,1,1)
+                for t2 in lv_24point([v[i], v[j]], next_level)
+                    ans = vcat(ans, make_24nodes([t2, w...], level))
+                end
                 for t3 in make_24nodes(w, next_level)
                     # (1,1,3)
                     ans = vcat(ans, lv_24point([v[i], v[j], t3], level))
@@ -168,7 +172,7 @@ function make_24nodes(v::AbstractVector{Node24{T}}, level) where T <: Integer
                         ans = vcat(ans, lv_24point([t2, t3], level))
                     end
                 end
-                # (1,2,2)
+                # (2,2,1)
                 for k in (i+1):n
                     k == j && continue
                     for l in (k+1):n
