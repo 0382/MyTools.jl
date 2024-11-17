@@ -74,13 +74,12 @@ module Tool
     using ..Nucleus
     include("tool.jl")
     export GPA, get_id_check_code, check_idcard,
-        Fibonacci_matrix, Fibonacci_coeff,
-        play_24game
+        Fibonacci_matrix, Fibonacci_coeff
 end # module Tool
 
 module Game
     include("game/24point.jl")
-    export Node24, play_24point
+    export Node24, play_24point, make_24nodes
 end # module Game
 
 end # module MyTools

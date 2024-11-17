@@ -3,14 +3,14 @@ struct Node24{T<:Integer}
     children::Vector{Node24{T}}
     ops::Vector{Char}
     level::Int
-    function Node24(value::Rational{T}, children::Vector{Node24{T}}, ops::Vector{Char}, level::Int) where T<:Integer
+    function Node24(value::Rational{T}, children::Vector{Node24{T}}, ops::Vector{Char}, level::Int) where {T<:Integer}
         new{T}(value, children, ops, level)
     end
 end
 
-Node24(value::Rational{T}, children::Vector{Node24{T}}, ops::Vector{Char}) where T<:Integer = Node24(value, children, ops, 0)
-Node24(value::Rational{T}) where T<:Integer = Node24(value, Node24{T}[], Char[])
-Node24(value::Integer) = Node24(value//1)
+Node24(value::Rational{T}, children::Vector{Node24{T}}, ops::Vector{Char}) where {T<:Integer} = Node24(value, children, ops, 0)
+Node24(value::Rational{T}) where {T<:Integer} = Node24(value, Node24{T}[], Char[])
+Node24(value::Integer) = Node24(value // 1)
 
 function _show(node::Node24, final::Bool)
     isempty(node.children) && return string(numerator(node.value))
@@ -23,19 +23,19 @@ end
 
 Base.show(io::IO, node::Node24) = print(io, _show(node, true))
 
-function lv1_24point(v::AbstractVector{Node24{T}}) where T <: Integer
+function lv1_24point(v::AbstractVector{Node24{T}}) where {T<:Integer}
     n = length(v)
     if n == 1
         v[1].level == 0 && return v
         return []
     end
     ans = []
-    for mask = 1:((1<<n) - 1)
+    for mask = 1:((1<<n)-1)
         sum = zero(Rational{T})
         ops = Char[]
         skip = false
         for i = 1:n
-            if !iszero(mask & (1<<(i-1)))
+            if !iszero(mask & (1 << (i - 1)))
                 sum += v[i].value
                 push!(ops, '+')
             else
@@ -60,19 +60,19 @@ function lv1_24point(v::AbstractVector{Node24{T}}) where T <: Integer
     return ans
 end
 
-function lv2_24point(v::AbstractVector{Node24{T}}) where T<:Integer
+function lv2_24point(v::AbstractVector{Node24{T}}) where {T<:Integer}
     n = length(v)
     if n == 1
         v[1].level == 0 && return v
         return []
     end
     ans = []
-    for mask = 1:((1<<n) - 1)
+    for mask = 1:((1<<n)-1)
         prod = one(Rational{T})
         ops = Char[]
         skip = false
         for i = 1:n
-            if !iszero(mask & (1<<(i-1)))
+            if !iszero(mask & (1 << (i - 1)))
                 prod *= v[i].value
                 push!(ops, '×')
             else
@@ -108,7 +108,7 @@ function _next_lv(level)
     return 0
 end
 
-function make_24nodes(v::AbstractVector{Node24{T}}, level) where T <: Integer
+function make_24nodes(v::AbstractVector{Node24{T}}, level) where {T<:Integer}
     n = length(v)
     n >= 6 && error("Not implemented yet for n >= 6")
     n == 1 && return v
@@ -123,9 +123,11 @@ function make_24nodes(v::AbstractVector{Node24{T}}, level) where T <: Integer
     end
     (lv != 0 && lv == level) && return Node24{T}[]
     n == 2 && return lv_24point(v, level)
-    
+
     next_level = _next_lv(level)
     ans = lv_24point(v, level)
+
+    # (1, n-1)
     st = Set{typeof(v[1].value)}()
     for i = 1:n
         if v[i].level == 0
@@ -138,16 +140,24 @@ function make_24nodes(v::AbstractVector{Node24{T}}, level) where T <: Integer
             ans = vcat(ans, lv_24point([v[i], t], level))
         end
     end
-    
+
     if n == 4
         for i in 1:n
             for j in (i+1):n
+                tijs = lv_24point([v[i], v[j]], next_level)
+                w = v[setdiff(1:n, [i, j])]
+                # (1,1,2)
+                for t in tijs
+                    ans = vcat(ans, lv_24point([t, w...], level))
+                end
+                # (2, 2)
                 for k in (i+1):n
                     k == j && continue
                     for l in (k+1):n
                         l == j && continue
-                        for t1 in lv_24point([v[i], v[j]], next_level)
-                            for t2 in lv_24point([v[k], v[l]], next_level)
+                        tkls = lv_24point([v[k], v[l]], next_level)
+                        for t1 in tijs
+                            for t2 in tkls
                                 ans = vcat(ans, lv_24point([t1, t2], level))
                             end
                         end
@@ -193,11 +203,16 @@ function make_24nodes(v::AbstractVector{Node24{T}}, level) where T <: Integer
     return ans
 end
 
+function make_24nodes(v::AbstractVector{T}, level) where {T<:Integer}
+    nodes = Node24.(v)
+    return make_24nodes(nodes, level)
+end
+
 """
     play_24point(v::AbstractVector{T}) where T<:Integer
 24点游戏，给定4个整数，返回所有可能的表达式
 """
-function play_24point(v::AbstractVector{T}) where T<:Integer
+function play_24point(v::AbstractVector{T}) where {T<:Integer}
     n = length(v)
     nodes = Node24.(v)
     ans = Node24{T}[]
